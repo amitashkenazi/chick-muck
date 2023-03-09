@@ -1,6 +1,6 @@
 # chiki-micki
 
 in the openai dictionary, you can find the following lab:
-* application-information-lab - extract question from the article
-* check-in-lab - generate FAQ examples
+* structured-embedding-lab - extract question from the article
+* structured-embedding-FAQ-generation-lab - generate FAQ examples
 * enbedding-azure-free-account-faq - embedding + FAQ
