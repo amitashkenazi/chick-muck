@@ -1,4 +1,4 @@
-# chiki-micki
+# chick-muck
 
 in the openai dictionary, you can find the following lab:
 * structured-embedding-lab - extract question from the article
