@@ -1,0 +1,6 @@
+streamlit
+openai
+streamlit-chat
+matplotlib
+scikit-learn
+plotly
