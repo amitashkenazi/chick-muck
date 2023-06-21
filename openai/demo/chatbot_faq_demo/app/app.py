@@ -87,28 +87,17 @@ def generate_gpt_chat(prompt,model='gpt-35-turbo',max_tokens=4000,temperature=0.
     answers = []
     if not agent_mode:
         print("open chat mode")
-        messages = [
-            {"role":"system","content":"""You are an agent that returns answer based on the knowledge base. 
-                you will get the answers relevant to the questions, and you will return the answer that is most relevant to the question. 
-                You are an Azure customer support agent whose primary goal is to help users with issues they are experiencing while using azure. 
-                You are friendly and concise. You only provide factual answers to queries, and do not provide answers that are not related to Azure.
-                If a question about azure services is asked, you will only answer on AKS service. for a question other than AKS service, apologize and ask the user to ask a different question or contact support.
-                you will not return answers that are not related to the question.
-                answer only questions related to Azure.
-                Few-shots examples:
-                The following are examples of how you should respond to the user:
-                role:"user", content:"How much credit do you get when Subscribing to AWS?",
-                role:"assistant", content:"I apologize, but I do not have information about the prices of other cloud platforms such as AWS. My primary focus is to assist with issues regarding Azure cloud platform. Is there a specific issue you are having with your Azure account that I may be able to help with?"},
-                role:"user", content:"How much credit do you get when Subscribing to GCP?",
-                role:"assistant", content:'I apologize, but I do not have information about the prices of other cloud platforms such as GCP. My primary focus is to assist with issues regarding Azure cloud platform. Is there a specific issue you are having with your Azure account that I may be able to help with?'
-                role:"user", content:"Does key vault is multi-region service",
-                role:"assistant", content:'I apologize, but I do not have information about other services other than AKS. My primary focus is to assist with issues regarding Azure Free Acount or AKS service. Is there a specific issue you are having with your Azure account that I may be able to help with?'
-            """
-            }]
+        system_message = get_system_message()
+        few_shots_string = ""
+        for few_shot in get_few_shots():
+            few_shots_string += f"""{few_shot}"""
+        system_message += few_shots_string
+        print(f"system message: {system_message}")
+        messages = [ { "role":"system","content":system_message}]
         for msg in st.session_state['message_history']:
             messages.append(msg)
         messages.append({"role":"user","content":prompt})
-        messages.append({"role":"system","content":"do not answer questions that are not related to Azure or AKS service. if the user asked a question that is not related to Azure or AKS service, apologize and ask the user to ask a different question or contact support"})  
+        # messages.append({"role":"system","content":"Answer only questions that are related to Azure free account or AKS service. if the user asked a question that is not related to Azure free account or AKS service, apologize and ask the user to ask a different question or contact support"})  
     else:
         print("FAQ mode")
         answers = knowledge_management.search_faq(embeddings_utils, prompt)
@@ -120,30 +109,17 @@ def generate_gpt_chat(prompt,model='gpt-35-turbo',max_tokens=4000,temperature=0.
         else:
             prompt = f"""The user input: {prompt}. If the user did not ask anything, respond and encourage him to share his problem. if the user asked a question, The relevant answers are: 
             {answers_string}. combine the answers to a single answer and return it to the user. use only the facts in the answers and do not add any new information"""
-        messages = [ 
-            {
-                "role":"system","content":
-                """You are an agent that returns answer based on the knowledge base. 
-                you will get the answers relevant to the questions, and you will return the answer that is most relevant to the question. 
-                You are an Azure customer support agent whose primary goal is to help users with issues they are experiencing while using azure. 
-                You are friendly and concise. You only provide factual answers to queries, and do not provide answers that are not related to Azure.
-                If a question about azure services is asked, you will only answer on AKS service. for a question other than AKS service, apologize and ask the user to ask a different question or contact support.
-                you will not return answers that are not related to the question.
-                answer only questions related to Azure.
-                Few-shots examples:
-                The following are examples of how you should respond to the user:
-                role:"user", content:"How much credit do you get when Subscribing to AWS?",
-                role:"assistant", content:"I apologize, but I do not have information about the prices of other cloud platforms such as AWS. My primary focus is to assist with issues regarding Azure cloud platform. Is there a specific issue you are having with your Azure account that I may be able to help with?"},
-                role:"user", content:"How much credit do you get when Subscribing to GCP?",
-                role:"assistant", content:'I apologize, but I do not have information about the prices of other cloud platforms such as GCP. My primary focus is to assist with issues regarding Azure cloud platform. Is there a specific issue you are having with your Azure account that I may be able to help with?'
-                role:"user", content:"Does key vault is multi-region service",
-                role:"assistant", content:'I apologize, but I do not have information about other services other than AKS. My primary focus is to assist with issues regarding Azure Free Acount or AKS service. Is there a specific issue you are having with your Azure account that I may be able to help with?'
-            """}
-            ]
+        system_message = get_system_message()
+        few_shots_string = ""
+        for few_shot in get_few_shots():
+            few_shots_string += f"""{few_shot}"""
+        system_message += few_shots_string
+        
+        messages = [ { "role":"system","content":system_message}]
         for msg in st.session_state['message_history']:
             messages.append(msg)
         messages.append({"role":"user","content":prompt})
-        messages.append({"role":"system","content":"do not answer questions that are not related to Azure or AKS service. if the user asked a question that is not related to Azure or AKS service, apologize and ask the user to ask a different question or contact support"})
+        # messages.append({"role":"system","content":"Answer only questions that are related to Azure free account or AKS service. if the user asked a question that is not related to Azure free account or AKS service, apologize and ask the user to ask a different question or contact support"})
     print(f"messages for the chatbot: {messages}")
     print(f"model: {model}")
     response = openai.ChatCompletion.create(
@@ -161,10 +137,40 @@ def generate_gpt_chat(prompt,model='gpt-35-turbo',max_tokens=4000,temperature=0.
         "answers": answers
         }
 
+def get_system_message():
+    return """You are an agent that returns answer based on the knowledge base.
+you will get the answers relevant to the questions, and you will return the answer that is most relevant to the question.
+You are an Azure customer support agent whose primary goal is to help users with issues they are experiencing while using azure.
+You are friendly and concise. You only provide factual answers to queries, and provide answers that are related to Azure.
+In the event of a query about Azure services, your responses should be strictly confined to the AKS service, also known as Azure Kubernetes Service or AKS. 
+If a question pertains to any other Azure service beyond AKS, courteously apologize and prompt the user to either pose a different question or reach out to customer support.
+you will not return answers that are not related to the question.
+answer only questions related to Azure.
+Few-shots examples:
+The following are examples of how you should respond to the user:
+"""
+
+def get_few_shots():
+    return [
+        [
+            {"role":"user", "content":"How much credit do you get when Subscribing to AWS?"},
+            {"role":"assistant", "content":"I apologize, but I do not have information about the prices of other cloud platforms such as AWS. My primary focus is to assist with issues regarding Azure cloud platform. Is there a specific issue you are having with your Azure account that I may be able to help with?"}
+        ],
+        [
+            {"role":"user", "content":"How much credit do you get when Subscribing to GCP?"},
+            {"role":"assistant", "content":"I apologize, but I do not have information about the prices of other cloud platforms such as GCP. My primary focus is to assist with issues regarding Azure cloud platform. Is there a specific issue you are having with your Azure account that I may be able to help with?"}
+        ],
+        [
+            {"role":"user", "content":"Does key vault is multi-region service"},
+            {"role":"assistant", "content":"I apologize, but I do not have information about other services other than AKS. My primary focus is to assist with issues regarding Azure Free Acount or AKS service. Is there a specific issue you are having with your Azure account that I may be able to help with?"}
+        ] 
+         
+    ]
+
 model = st.text_input("select chat model",key='model', value='gpt-35-turbo')
 model_embedding = st.text_input("select chat model",key='model_embedding', value='text-embedding-ada-002')
     
-if st.button('Embeddings', key='embeddings'): 
+if st.button('Create Embeddings from FAQs', key='embeddings'): 
     knowledge_management.data_embedding(embeddings_utils, model=model_embedding)
     
 chat(model, model_embedding)

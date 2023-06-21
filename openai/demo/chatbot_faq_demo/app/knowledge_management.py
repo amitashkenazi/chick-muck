@@ -92,6 +92,9 @@ def save_question_embedding(question, embedding):
 if __name__ == "__main__":
     # Set up OpenAI API key
     import openai
-    openai.api_key = os.environ['OPENAI_API_KEY_2']
+    openai.api_key = os.environ['OPENAI_API_KEY']
+    openai.api_base = os.environ['OPENAI_ENDPOINT']
+    openai.api_type = "azure"
+    openai.api_version = "2023-03-15-preview"
     data_embedding(embeddings_utils, model='text-embedding-ada-002')
     
