@@ -5,6 +5,7 @@ import openai.embeddings_utils as embeddings_utils
 from pprint import pprint
 import qa_agent
 import knowledge_management
+import analytics
 import os
 
 # Set up OpenAI API key
@@ -172,5 +173,20 @@ model_embedding = st.text_input("select chat model",key='model_embedding', value
     
 if st.button('Create Embeddings from FAQs', key='embeddings'): 
     knowledge_management.data_embedding(embeddings_utils, model=model_embedding)
-    
+
+
+
 chat(model, model_embedding)
+
+if st.button('Questions Clustering', key='cluster'):
+    # Display the plot using Streamlit
+    fig, df, colors, num_clusters = analytics.analysis()
+    st.pyplot(fig)
+
+    # Print questions beneath the plot, colored by cluster
+    st.write("\nClustered Questions:\n")
+    for i in range(num_clusters):
+        st.write(f"Cluster {i+1} (color = {colors[i]}):")
+        for question in df['question'][df['cluster'] == i].values:
+            st.write(question)
+    
