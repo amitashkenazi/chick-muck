@@ -5,18 +5,6 @@ import pickle
 import os
 from csv import writer
 
-
-def normalize_text(s, sep_token = " \n "):
-    print(s)
-    s = re.sub(r'\s+',  ' ', s).strip()
-    s = re.sub(r". ,","",s)
-    # remove all instances of multiple spaces
-    s = s.replace("..",".")
-    s = s.replace(". .",".")
-    s = s.replace("\n", "")
-    s = s.strip()
-    return s
-
 def data_embedding(embeddings_utils, model='text-embedding-ada-002'):
     print("reading csv")
     df_faq = pd.read_csv('data/faq.csv')
@@ -30,14 +18,25 @@ def data_embedding(embeddings_utils, model='text-embedding-ada-002'):
     with open('data/df_faq.pickle', 'wb') as handle:
         pickle.dump(df_faq, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
+def normalize_text(s, sep_token = " \n "):
+    print(s)
+    s = re.sub(r'\s+',  ' ', s).strip()
+    s = re.sub(r". ,","",s)
+    # remove all instances of multiple spaces
+    s = s.replace("..",".")
+    s = s.replace(". .",".")
+    s = s.replace("\n", "")
+    s = s.strip()
+    return s
 
 # search through the reviews for a specific product
-def search_docs(embeddings_utils, user_query, top_n=3, th=0.8, model='text-embedding-ada-002'):
+def search_faq(embeddings_utils, user_query, top_n=3, th=0.8, model='text-embedding-ada-002'):
     # get embedding for user query
     embedding = embeddings_utils.get_embedding(
         user_query,
         engine=model
     )
+    print(f"embedding={len(embedding)}")
     save_question_embedding(user_query, embedding)
     #load pickle
     with open('data/df_faq.pickle', 'rb') as handle:
@@ -52,7 +51,7 @@ def search_docs(embeddings_utils, user_query, top_n=3, th=0.8, model='text-embed
             df_faq.sort_values("similarities", ascending=False)
             .head(top_n)
         )
-        print(f"knowledge_management.py search_docs res={res}")
+        print(f"knowledge_management.py search_faq res={res}")
         return res
     return None
 
