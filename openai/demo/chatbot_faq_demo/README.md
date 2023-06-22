@@ -12,6 +12,13 @@ This project relies on the following dependencies:
 
 streamlit
 openai
+streamlit-chat
+matplotlib
+scikit-learn
+plotly
+
+You can install the dependencies using pip:
+pip install -r requirements.txt
 
 You need to have these dependencies installed on your system or virtual environment before running the chatbot.
 
