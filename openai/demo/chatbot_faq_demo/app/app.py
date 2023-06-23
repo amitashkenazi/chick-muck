@@ -54,7 +54,7 @@ def chat(model, model_embedding):
 
         if user_input:
             print("user input: ",user_input)
-            output=generate_gpt_chat(prompt=user_input,model=model,max_tokens=max_tokens,temperature=temperature, agent_mode=agent_mode)
+            output=generate_gpt_chat(prompt=user_input,model=model,model_embedding=model_embedding, max_tokens=max_tokens,temperature=temperature, agent_mode=agent_mode)
             global_user_context["content"].append(user_input)
             #store the output
             st.session_state['past'].append(user_input)
@@ -76,7 +76,7 @@ def chat(model, model_embedding):
 
 
 
-def generate_gpt_chat(prompt,model='gpt-35-turbo',max_tokens=4000,temperature=0.5, agent_mode=False):
+def generate_gpt_chat(prompt,model='gpt-35-turbo', model_embedding='text-embedding-ada-002', max_tokens=4000,temperature=0.5, agent_mode=False):
     """
     This function generates a chat response using the OpenAI's GPT model. 
     It operates in two modes: open chat and FAQ mode. In open chat, 
@@ -101,7 +101,7 @@ def generate_gpt_chat(prompt,model='gpt-35-turbo',max_tokens=4000,temperature=0.
         # messages.append({"role":"system","content":"Answer only questions that are related to Azure free account or AKS service. if the user asked a question that is not related to Azure free account or AKS service, apologize and ask the user to ask a different question or contact support"})  
     else:
         print("FAQ mode")
-        answers = knowledge_management.search_faq(embeddings_utils, prompt)
+        answers = knowledge_management.search_faq(embeddings_utils, prompt, model=model_embedding)
         answers_string = ""
         for idx, answer in enumerate(answers['answer']):
             answers_string += f"""{idx}. {answer}"""
